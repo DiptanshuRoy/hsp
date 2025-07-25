@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Readmission Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="static/style.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .btn-predict {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .result-card {
+            border-left: 5px solid #28a745;
+        }
+        .result-card.high-risk {
+            border-left-color: #dc3545;
+        }
+        .loading {
+            display: none;
+        }
+        .form-section {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .section-title {
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0"><i class="fas fa-hospital-alt me-3"></i>Hospital Readmission Prediction</h1>
+                    <p class="mb-0 mt-2">AI-powered risk assessment for 30-day readmission prediction</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <i class="fas fa-chart-line fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="fas fa-user-md me-2"></i>Patient Information
+                        </h5>
+                        
+                        <form id="predictionForm">
+                            <!-- Demographics Section -->
+                            <div class="form-section">
+                                <h6 class="section-title">Demographics</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="age" class="form-label">Age</label>
+                                            <input type="number" class="form-control" id="age" min="0" max="120" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="gender" class="form-label">Gender</label>
+                                            <select class="form-select" id="gender" required>
+                                                <option value="">Select Gender</option>
+                                                <option value="1">Male</option>
+                                                <option value="0">Female</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hospital Stay Section -->
+                            <div class="form-section">
+                                <h6 class="section-title">Hospital Stay Details</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="time_in_hospital" class="form-label">Time in Hospital (days)</label>
+                                            <input type="number" class="form-control" id="time_in_hospital" min="1" max="30" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="num_lab_procedures" class="form-label">Number of Lab Procedures</label>
+                                            <input type="number" class="form-control" id="num_lab_procedures" min="0" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="number_outpatient" class="form-label">Outpatient Visits</label>
+                                            <input type="number" class="form-control" id="number_outpatient" min="0" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="number_emergency" class="form-label">Emergency Visits</label>
+                                            <input type="number" class="form-control" id="number_emergency" min="0" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="number_inpatient" class="form-label">Inpatient Visits</label>
+                                            <input type="number" class="form-control" id="number_inpatient" min="0" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Medical Information Section -->
+                            <div class="form-section">
+                                <h6 class="section-title">Medical Information</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="num_diagnoses" class="form-label">Number of Diagnoses</label>
+                                            <input type="number" class="form-control" id="num_diagnoses" min="1" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="A1Cresult_7" class="form-label">A1C Result >7</label>
+                                            <select class="form-select" id="A1Cresult_7" required>
+                                                <option value="">Select</option>
+                                                <option value="1">Yes</option>
+                                                <option value="0">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Medication Section -->
+                            <div class="form-section">
+                                <h6 class="section-title">Medication Information</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="diabetesMed_Yes" class="form-label">Diabetes Medication</label>
+                                            <select class="form-select" id="diabetesMed_Yes" required>
+                                                <option value="">Select</option>
+                                                <option value="1">Yes</option>
+                                                <option value="0">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="change_Ch" class="form-label">Medication Change</label>
+                                            <select class="form-select" id="change_Ch" required>
+                                                <option value="">Select</option>
+                                                <option value="1">Yes</option>
+                                                <option value="0">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="insulin_Steady" class="form-label">Insulin Steady</label>
+                                            <select class="form-select" id="insulin_Steady" required>
+                                                <option value="">Select</option>
+                                                <option value="1">Yes</option>
+                                                <option value="0">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Diagnosis Codes Section -->
+                            <div class="form-section">
+                                <h6 class="section-title">Primary Diagnosis Codes</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="diag_1_250_83" class="form-label">Diagnosis 1 (250.83)</label>
+                                            <select class="form-select" id="diag_1_250_83" required>
+                                                <option value="">Select</option>
+                                                <option value="1">Yes</option>
+                                                <option value="0">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="diag_2_401_9" class="form-label">Diagnosis 2 (401.9)</label>
+                                            <select class="form-select" id="diag_2_401_9" required>
+                                                <option value="">Select</option>
+                                                <option value="1">Yes</option>
+                                                <option value="0">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="diag_3_414_01" class="form-label">Diagnosis 3 (414.01)</label>
+                                            <select class="form-select" id="diag_3_414_01" required>
+                                                <option value="">Select</option>
+                                                <option value="1">Yes</option>
+                                                <option value="0">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary btn-predict btn-lg">
+                                    <span class="loading">
+                                        <i class="fas fa-spinner fa-spin me-2"></i>Analyzing...
+                                    </span>
+                                    <span class="normal">
+                                        <i class="fas fa-brain me-2"></i>Predict Readmission Risk
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card" id="resultCard" style="display: none;">
+                    <div class="card-body text-center">
+                        <div id="resultContent">
+                            <!-- Results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-info-circle me-2"></i>About This Tool
+                        </h6>
+                        <p class="card-text small">
+                            This AI model predicts the likelihood of hospital readmission within 30 days based on patient data and medical history.
+                        </p>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-check text-success me-2"></i>XGBoost machine learning model</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Trained on hospital records</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Real-time predictions</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Important Notice
+                        </h6>
+                        <p class="card-text small text-muted">
+                            This tool is for informational purposes only and should not replace professional medical judgment. Always consult with healthcare professionals for medical decisions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/script.js"></script>
+</body>
+</html>
